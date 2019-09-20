@@ -2,13 +2,25 @@ use std::any::TypeId;
 use std::collections::hash_map::{HashMap, Values, ValuesMut};
 use std::vec::IntoIter;
 
+use crate::{Data, Definition};
+
 pub use self::error::Error;
 
 pub mod error;
 pub mod types;
 
-pub trait Constrain<T> {
+pub trait Constrain<T: Data> {
     fn constrain(&self, data: &T) -> Result<(), Error>;
+}
+
+impl<T, U> Constrain<U> for T
+where
+    T: Definition<Data = U>,
+    U: Data,
+{
+    fn constrain(&self, data: &U) -> Result<(), Error> {
+        Constraint::constrain(self.constraints(), data)
+    }
 }
 
 pub trait Validate<T> {
@@ -17,6 +29,7 @@ pub trait Validate<T> {
 
 impl<T, U> Validate<U> for T
 where
+    T: Data,
     U: Constrain<T>,
 {
     fn validate(&self, constraint: &U) -> Result<(), Error> {
@@ -24,13 +37,13 @@ where
     }
 }
 
-pub trait Constraint<T> {
+pub trait Constraint<T: Data> {
     fn constrain(&self, data: &T) -> Result<(), Error>;
 }
 
 impl<T, U> Constraint<U> for T
 where
-    U: Validate<T>,
+    U: Data + Validate<T>,
 {
     fn constrain(&self, data: &U) -> Result<(), Error> {
         data.validate(self)
@@ -38,9 +51,12 @@ where
 }
 
 #[derive(Default)]
-pub struct Constraints<T>(HashMap<TypeId, Box<dyn Constraint<T>>>);
+pub struct Constraints<T: Data>(HashMap<TypeId, Box<dyn Constraint<T>>>);
 
-impl<T> Constraints<T> {
+impl<T> Constraints<T>
+where
+    T: Data,
+{
     pub fn new() -> Self {
         Self(HashMap::new())
     }
@@ -60,7 +76,10 @@ impl<T> Constraints<T> {
     }
 }
 
-impl<T> Constrain<T> for Constraints<T> {
+impl<T> Constrain<T> for Constraints<T>
+where
+    T: Data,
+{
     fn constrain(&self, data: &T) -> Result<(), Error> {
         for constraint in self.0.values() {
             (**constraint).constrain(data)?;
@@ -70,7 +89,10 @@ impl<T> Constrain<T> for Constraints<T> {
     }
 }
 
-impl<T> IntoIterator for Constraints<T> {
+impl<T> IntoIterator for Constraints<T>
+where
+    T: Data,
+{
     type Item = Box<dyn Constraint<T>>;
     type IntoIter = IntoIter<Box<dyn Constraint<T>>>;
 
@@ -83,7 +105,10 @@ impl<T> IntoIterator for Constraints<T> {
     }
 }
 
-impl<'a, T> IntoIterator for &'a Constraints<T> {
+impl<'a, T> IntoIterator for &'a Constraints<T>
+where
+    T: Data,
+{
     type Item = &'a Box<dyn Constraint<T>>;
     type IntoIter = Values<'a, TypeId, Box<dyn Constraint<T>>>;
 
@@ -92,7 +117,10 @@ impl<'a, T> IntoIterator for &'a Constraints<T> {
     }
 }
 
-impl<'a, T> IntoIterator for &'a mut Constraints<T> {
+impl<'a, T> IntoIterator for &'a mut Constraints<T>
+where
+    T: Data,
+{
     type Item = &'a mut Box<dyn Constraint<T>>;
     type IntoIter = ValuesMut<'a, TypeId, Box<dyn Constraint<T>>>;
 
@@ -104,13 +132,19 @@ impl<'a, T> IntoIterator for &'a mut Constraints<T> {
 #[cfg(test)]
 mod tests {
     use super::{Constrain, Error, Validate};
+    use crate::{Data, SimpleDefinition};
 
-    struct Data(usize);
+    struct Number(usize);
+
+    impl Data for Number {
+        type Definition = SimpleDefinition<Self>;
+    }
+
     struct ConstraintOne(usize);
     struct ConstraintTwo(usize);
 
-    impl Constrain<Data> for ConstraintOne {
-        fn constrain(&self, data: &Data) -> Result<(), Error> {
+    impl Constrain<Number> for ConstraintOne {
+        fn constrain(&self, data: &Number) -> Result<(), Error> {
             if self.0 != data.0 {
                 return Err(Error::message("Value does not match"));
             }
@@ -119,7 +153,7 @@ mod tests {
         }
     }
 
-    impl Validate<ConstraintTwo> for Data {
+    impl Validate<ConstraintTwo> for Number {
         fn validate(&self, constraint: &ConstraintTwo) -> Result<(), Error> {
             if self.0 != constraint.0 {
                 return Err(Error::message("Value does not match"));
@@ -133,13 +167,13 @@ mod tests {
     fn test_constrain() {
         let constraint = ConstraintOne(1);
 
-        assert!(constraint.constrain(&Data(1)).is_ok());
-        assert!(constraint.constrain(&Data(2)).is_err());
+        assert!(constraint.constrain(&Number(1)).is_ok());
+        assert!(constraint.constrain(&Number(2)).is_err());
     }
 
     #[test]
     fn test_validate() {
-        let data = Data(1);
+        let data = Number(1);
 
         assert!(data.validate(&ConstraintOne(1)).is_ok());
         assert!(data.validate(&ConstraintOne(2)).is_err());

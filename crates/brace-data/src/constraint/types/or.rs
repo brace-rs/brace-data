@@ -1,9 +1,13 @@
 use crate::constraint::{Constrain, Constraint, Constraints, Error};
+use crate::Data;
 
 #[derive(Default)]
-pub struct Or<T>(Constraints<T>);
+pub struct Or<T: Data>(Constraints<T>);
 
-impl<T> Or<T> {
+impl<T> Or<T>
+where
+    T: Data,
+{
     pub fn new() -> Self {
         Self(Constraints::new())
     }
@@ -23,7 +27,10 @@ impl<T> Or<T> {
     }
 }
 
-impl<T> Constrain<T> for Or<T> {
+impl<T> Constrain<T> for Or<T>
+where
+    T: Data,
+{
     fn constrain(&self, data: &T) -> Result<(), Error> {
         for constraint in &self.0 {
             if let Ok(()) = (**constraint).constrain(data) {

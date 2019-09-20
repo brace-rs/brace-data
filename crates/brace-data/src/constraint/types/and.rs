@@ -1,9 +1,13 @@
 use crate::constraint::{Constrain, Constraint, Constraints, Error};
+use crate::Data;
 
 #[derive(Default)]
-pub struct And<T>(Constraints<T>);
+pub struct And<T: Data>(Constraints<T>);
 
-impl<T> And<T> {
+impl<T> And<T>
+where
+    T: Data,
+{
     pub fn new() -> Self {
         Self(Constraints::new())
     }
@@ -23,7 +27,10 @@ impl<T> And<T> {
     }
 }
 
-impl<T> Constrain<T> for And<T> {
+impl<T> Constrain<T> for And<T>
+where
+    T: Data,
+{
     fn constrain(&self, data: &T) -> Result<(), Error> {
         for constraint in &self.0 {
             (**constraint).constrain(data)?;
