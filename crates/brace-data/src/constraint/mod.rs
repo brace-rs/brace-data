@@ -20,6 +20,19 @@ where
     }
 }
 
+pub trait Constraint<T> {
+    fn constrain(&self, data: &T) -> Result<(), Error>;
+}
+
+impl<T, U> Constraint<U> for T
+where
+    U: Validate<T>,
+{
+    fn constrain(&self, data: &U) -> Result<(), Error> {
+        data.validate(self)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::{Constrain, Error, Validate};
