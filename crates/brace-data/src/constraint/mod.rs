@@ -1,6 +1,7 @@
 pub use self::error::Error;
 
 pub mod error;
+pub mod types;
 
 pub trait Constrain<T> {
     fn constrain(&self, data: &T) -> Result<(), Error>;
