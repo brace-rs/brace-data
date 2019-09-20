@@ -1,0 +1,8 @@
+[package]
+name = "brace-data"
+version = "0.1.0"
+authors = ["Daniel Balcomb <daniel.balcomb@gmail.com>"]
+description = "A utility library for the uniform handling and querying of data."
+repository = "https://github.com/brace-rs/brace-data"
+license = "MIT OR Apache-2.0"
+edition = "2018"
