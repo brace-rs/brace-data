@@ -1,4 +1,4 @@
-pub mod all;
-pub mod any;
+pub mod and;
 pub mod max_length;
 pub mod min_length;
+pub mod or;

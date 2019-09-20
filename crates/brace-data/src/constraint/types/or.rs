@@ -4,9 +4,9 @@ use std::collections::HashMap;
 use crate::constraint::{Constrain, Constraint, Error};
 
 #[derive(Default)]
-pub struct All<T>(HashMap<TypeId, Box<dyn Constraint<T>>>);
+pub struct Or<T>(HashMap<TypeId, Box<dyn Constraint<T>>>);
 
-impl<T> All<T> {
+impl<T> Or<T> {
     pub fn new() -> Self {
         Self(HashMap::new())
     }
@@ -26,37 +26,39 @@ impl<T> All<T> {
     }
 }
 
-impl<T> Constrain<T> for All<T> {
+impl<T> Constrain<T> for Or<T> {
     fn constrain(&self, data: &T) -> Result<(), Error> {
         for constraint in self.0.values() {
-            (**constraint).constrain(data)?;
+            if let Ok(()) = (**constraint).constrain(data) {
+                return Ok(());
+            }
         }
 
-        Ok(())
+        Err(Error::message("No constraints passed validation"))
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::All;
+    use super::Or;
     use crate::constraint::types::max_length::MaxLength;
     use crate::constraint::types::min_length::MinLength;
     use crate::constraint::Validate;
 
     #[test]
-    fn test_all() {
+    fn test_any() {
         let text = String::from("hello");
 
-        let mut constraint_one = All::new();
+        let mut constraint_one = Or::new();
 
-        constraint_one.insert(MinLength(1));
-        constraint_one.insert(MaxLength(5));
+        constraint_one.insert(MinLength(9));
+        constraint_one.insert(MaxLength(9));
 
         assert!(text.validate(&constraint_one).is_ok());
 
-        let mut constraint_two = All::new();
+        let mut constraint_two = Or::new();
 
-        constraint_two.insert(MinLength(1));
+        constraint_two.insert(MinLength(9));
         constraint_two.insert(MaxLength(1));
 
         assert!(text.validate(&constraint_two).is_err());
