@@ -48,7 +48,7 @@ mod tests {
     use crate::constraint::Validate;
 
     #[test]
-    fn test_all() {
+    fn test_and() {
         let text = String::from("hello");
 
         let mut constraint_one = And::new();

@@ -50,7 +50,7 @@ mod tests {
     use crate::constraint::Validate;
 
     #[test]
-    fn test_any() {
+    fn test_or() {
         let text = String::from("hello");
 
         let mut constraint_one = Or::new();
