@@ -1,34 +1,31 @@
-use std::any::TypeId;
-use std::collections::HashMap;
-
-use crate::constraint::{Constrain, Constraint, Error};
+use crate::constraint::{Constrain, Constraint, Constraints, Error};
 
 #[derive(Default)]
-pub struct Or<T>(HashMap<TypeId, Box<dyn Constraint<T>>>);
+pub struct Or<T>(Constraints<T>);
 
 impl<T> Or<T> {
     pub fn new() -> Self {
-        Self(HashMap::new())
+        Self(Constraints::new())
     }
 
     pub fn insert<U>(&mut self, constraint: U)
     where
         U: Constraint<T> + 'static,
     {
-        self.0.insert(TypeId::of::<U>(), Box::new(constraint));
+        self.0.insert(constraint);
     }
 
     pub fn remove<U>(&mut self)
     where
         U: Constraint<T> + 'static,
     {
-        self.0.remove(&TypeId::of::<U>());
+        self.0.remove::<U>()
     }
 }
 
 impl<T> Constrain<T> for Or<T> {
     fn constrain(&self, data: &T) -> Result<(), Error> {
-        for constraint in self.0.values() {
+        for constraint in &self.0 {
             if let Ok(()) = (**constraint).constrain(data) {
                 return Ok(());
             }
