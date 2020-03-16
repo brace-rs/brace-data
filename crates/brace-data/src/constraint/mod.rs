@@ -140,12 +140,29 @@ where
 #[cfg(test)]
 mod tests {
     use super::{Constrain, Error, Validate};
-    use crate::{Data, SimpleDefinition};
+    use crate::constraint::Constraints;
+    use crate::{Data, Definition};
 
     struct Number(usize);
 
     impl Data for Number {
-        type Definition = SimpleDefinition<Self>;
+        type Definition = NumberDefinition;
+    }
+
+    struct NumberDefinition {
+        constraints: Constraints<Number>,
+    }
+
+    impl Definition for NumberDefinition {
+        type Data = Number;
+
+        fn constraints(&self) -> &Constraints<Self::Data> {
+            &self.constraints
+        }
+
+        fn constraints_mut(&mut self) -> &mut Constraints<Self::Data> {
+            &mut self.constraints
+        }
     }
 
     struct ConstraintOne(usize);

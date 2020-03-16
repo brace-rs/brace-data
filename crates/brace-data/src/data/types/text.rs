@@ -1,4 +1,6 @@
-use crate::{Data, SimpleDefinition};
+use crate::constraint::Constraints;
+use crate::data::definition::Definition;
+use crate::data::Data;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Text(String);
@@ -21,7 +23,7 @@ impl Text {
 }
 
 impl Data for Text {
-    type Definition = SimpleDefinition<Self>;
+    type Definition = TextDefinition;
 }
 
 impl From<&str> for Text {
@@ -36,13 +38,38 @@ impl From<String> for Text {
     }
 }
 
+#[derive(Default)]
+pub struct TextDefinition {
+    constraints: Constraints<Text>,
+}
+
+impl TextDefinition {
+    pub fn new() -> Self {
+        Self {
+            constraints: Constraints::new(),
+        }
+    }
+}
+
+impl Definition for TextDefinition {
+    type Data = Text;
+
+    fn constraints(&self) -> &Constraints<Self::Data> {
+        &self.constraints
+    }
+
+    fn constraints_mut(&mut self) -> &mut Constraints<Self::Data> {
+        &mut self.constraints
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::Text;
     use crate::constraint::types::max_length::MaxLength;
     use crate::constraint::types::min_length::MinLength;
     use crate::constraint::Validate;
-    use crate::{Definition, SimpleDefinition};
+    use crate::{Definition, TextDefinition};
 
     #[test]
     fn test_text_length() {
@@ -69,14 +96,14 @@ mod tests {
     fn test_text_data_definition() {
         let text = Text::new("hello");
 
-        let mut definition_one = SimpleDefinition::new();
+        let mut definition_one = TextDefinition::new();
 
         definition_one.constraints_mut().insert(MinLength(1));
         definition_one.constraints_mut().insert(MaxLength(9));
 
         assert!(text.validate(&definition_one).is_ok());
 
-        let mut definition_two = SimpleDefinition::new();
+        let mut definition_two = TextDefinition::new();
 
         definition_two.constraints_mut().insert(MinLength(9));
         definition_two.constraints_mut().insert(MaxLength(9));
