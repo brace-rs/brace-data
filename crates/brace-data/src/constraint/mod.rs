@@ -50,7 +50,6 @@ where
     }
 }
 
-#[derive(Default)]
 pub struct Constraints<T: Data>(HashMap<TypeId, Box<dyn Constraint<T>>>);
 
 impl<T> Constraints<T>
@@ -58,7 +57,7 @@ where
     T: Data,
 {
     pub fn new() -> Self {
-        Self(HashMap::new())
+        Self::default()
     }
 
     pub fn insert<U>(&mut self, constraint: U)
@@ -73,6 +72,15 @@ where
         U: Constraint<T> + 'static,
     {
         self.0.remove(&TypeId::of::<U>());
+    }
+}
+
+impl<T> Default for Constraints<T>
+where
+    T: Data,
+{
+    fn default() -> Self {
+        Self(HashMap::new())
     }
 }
 
