@@ -48,10 +48,11 @@ mod tests {
     use crate::constraint::types::max_length::MaxLength;
     use crate::constraint::types::min_length::MinLength;
     use crate::constraint::Validate;
+    use crate::types::text::Text;
 
     #[test]
     fn test_or() {
-        let text = String::from("hello");
+        let text = Text::from("hello");
 
         let mut constraint_one = Or::new();
 
