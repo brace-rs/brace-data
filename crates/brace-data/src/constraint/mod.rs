@@ -2,6 +2,8 @@ use std::any::TypeId;
 use std::collections::hash_map::{HashMap, Values, ValuesMut};
 use std::vec::IntoIter;
 
+use dyn_clone::{clone_trait_object, DynClone};
+
 use crate::{Data, Definition};
 
 pub use self::error::Error;
@@ -40,16 +42,19 @@ where
     }
 }
 
-pub trait Constraint<T>
+pub trait Constraint<T>: DynClone
 where
     T: Data,
 {
     fn constrain(&self, data: &T) -> Result<(), Error>;
 }
 
+clone_trait_object!(<T> Constraint<T>);
+
 impl<T, U> Constraint<U> for T
 where
     U: Data + Validate<T>,
+    T: Clone,
 {
     fn constrain(&self, data: &U) -> Result<(), Error> {
         data.validate(self)
@@ -80,6 +85,15 @@ where
         U: Constraint<T> + 'static,
     {
         self.0.remove(&TypeId::of::<U>());
+    }
+}
+
+impl<T> Clone for Constraints<T>
+where
+    T: Data,
+{
+    fn clone(&self) -> Self {
+        Self(self.0.clone())
     }
 }
 
@@ -172,7 +186,10 @@ mod tests {
         }
     }
 
+    #[derive(Clone)]
     struct ConstraintOne(usize);
+
+    #[derive(Clone)]
     struct ConstraintTwo(usize);
 
     impl Constrain<Number> for ConstraintOne {
@@ -211,5 +228,25 @@ mod tests {
         assert!(data.validate(&ConstraintOne(2)).is_err());
         assert!(data.validate(&ConstraintTwo(1)).is_ok());
         assert!(data.validate(&ConstraintTwo(2)).is_err());
+    }
+
+    #[test]
+    fn test_constraint_clone() {
+        let data = Number(1);
+        let mut a = Constraints::<Number>::new();
+
+        assert!(data.validate(&a).is_ok());
+
+        a.insert(ConstraintOne(1));
+
+        assert!(data.validate(&a).is_ok());
+
+        a.insert(ConstraintTwo(2));
+
+        assert!(data.validate(&a).is_err());
+
+        let b = a.clone();
+
+        assert!(data.validate(&b).is_err());
     }
 }

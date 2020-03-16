@@ -1,6 +1,7 @@
 use crate::constraint::{Constrain, Error};
 use crate::data::types::text::Text;
 
+#[derive(Clone)]
 pub struct MinLength(pub usize);
 
 impl Constrain<Text> for MinLength {

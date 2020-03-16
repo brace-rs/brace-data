@@ -1,6 +1,7 @@
 use crate::constraint::{Constrain, Error};
 use crate::data::types::text::Text;
 
+#[derive(Clone)]
 pub struct MaxLength(pub usize);
 
 impl Constrain<Text> for MaxLength {

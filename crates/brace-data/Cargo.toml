@@ -6,3 +6,6 @@ description = "A utility library for the uniform handling and querying of data."
 repository = "https://github.com/brace-rs/brace-data"
 license = "MIT OR Apache-2.0"
 edition = "2018"
+
+[dependencies]
+dyn-clone = "1.0"
