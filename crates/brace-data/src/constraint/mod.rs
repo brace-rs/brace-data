@@ -1,5 +1,6 @@
 use std::any::TypeId;
 use std::collections::hash_map::{HashMap, Values, ValuesMut};
+use std::fmt::{self, Debug};
 use std::vec::IntoIter;
 
 use dyn_clone::{clone_trait_object, DynClone};
@@ -42,7 +43,7 @@ where
     }
 }
 
-pub trait Constraint<T>: DynClone
+pub trait Constraint<T>: Debug + DynClone
 where
     T: Data,
 {
@@ -54,7 +55,7 @@ clone_trait_object!(<T> Constraint<T>);
 impl<T, U> Constraint<U> for T
 where
     U: Data + Validate<T>,
-    T: Clone,
+    T: Clone + Debug,
 {
     fn constrain(&self, data: &U) -> Result<(), Error> {
         data.validate(self)
@@ -94,6 +95,15 @@ where
 {
     fn clone(&self) -> Self {
         Self(self.0.clone())
+    }
+}
+
+impl<T> Debug for Constraints<T>
+where
+    T: Data,
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_list().entries(self.0.values()).finish()
     }
 }
 
@@ -186,10 +196,10 @@ mod tests {
         }
     }
 
-    #[derive(Clone)]
+    #[derive(Clone, Debug)]
     struct ConstraintOne(usize);
 
-    #[derive(Clone)]
+    #[derive(Clone, Debug)]
     struct ConstraintTwo(usize);
 
     impl Constrain<Number> for ConstraintOne {
@@ -248,5 +258,18 @@ mod tests {
         let b = a.clone();
 
         assert!(data.validate(&b).is_err());
+    }
+
+    #[test]
+    fn test_constraint_debug() {
+        let mut constraints = Constraints::<Number>::new();
+
+        constraints.insert(ConstraintOne(1));
+        constraints.insert(ConstraintTwo(2));
+
+        let debug = format!("{:?}", constraints);
+
+        assert!(debug.contains("ConstraintOne(1)"));
+        assert!(debug.contains("ConstraintTwo(2)"));
     }
 }

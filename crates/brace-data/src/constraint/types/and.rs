@@ -1,7 +1,7 @@
 use crate::constraint::{Constrain, Constraint, Constraints, Error};
 use crate::Data;
 
-#[derive(Clone, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct And<T>(Constraints<T>)
 where
     T: Data;
