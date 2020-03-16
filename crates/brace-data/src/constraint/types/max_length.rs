@@ -1,5 +1,5 @@
 use crate::constraint::{Constrain, Error};
-use crate::types::text::Text;
+use crate::data::types::text::Text;
 
 pub struct MaxLength(pub usize);
 
@@ -20,7 +20,7 @@ impl Constrain<Text> for MaxLength {
 mod tests {
     use super::MaxLength;
     use crate::constraint::Validate;
-    use crate::types::text::Text;
+    use crate::data::types::text::Text;
 
     #[test]
     fn test_text_max_length() {
