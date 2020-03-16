@@ -9,7 +9,10 @@ pub use self::error::Error;
 pub mod error;
 pub mod types;
 
-pub trait Constrain<T: Data> {
+pub trait Constrain<T>
+where
+    T: Data,
+{
     fn constrain(&self, data: &T) -> Result<(), Error>;
 }
 
@@ -37,7 +40,10 @@ where
     }
 }
 
-pub trait Constraint<T: Data> {
+pub trait Constraint<T>
+where
+    T: Data,
+{
     fn constrain(&self, data: &T) -> Result<(), Error>;
 }
 
@@ -50,7 +56,9 @@ where
     }
 }
 
-pub struct Constraints<T: Data>(HashMap<TypeId, Box<dyn Constraint<T>>>);
+pub struct Constraints<T>(HashMap<TypeId, Box<dyn Constraint<T>>>)
+where
+    T: Data;
 
 impl<T> Constraints<T>
 where
@@ -139,8 +147,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::{Constrain, Error, Validate};
-    use crate::constraint::Constraints;
+    use super::{Constrain, Constraints, Error, Validate};
     use crate::{Data, Definition};
 
     struct Number(usize);

@@ -2,7 +2,9 @@ use crate::constraint::{Constrain, Constraint, Constraints, Error};
 use crate::Data;
 
 #[derive(Default)]
-pub struct And<T: Data>(Constraints<T>);
+pub struct And<T>(Constraints<T>)
+where
+    T: Data;
 
 impl<T> And<T>
 where
