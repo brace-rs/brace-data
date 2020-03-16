@@ -1,7 +1,7 @@
 use crate::constraint::{Constrain, Constraint, Constraints, Error};
 use crate::Data;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Or<T>(Constraints<T>)
 where
     T: Data;

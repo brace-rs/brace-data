@@ -5,6 +5,7 @@ use std::vec::IntoIter;
 
 use dyn_clone::{clone_trait_object, DynClone};
 
+use crate::util::DynPartialEq;
 use crate::{Data, Definition};
 
 pub use self::error::Error;
@@ -22,7 +23,7 @@ where
 impl<T, U> Constrain<U> for T
 where
     T: Definition<Data = U>,
-    U: Data,
+    U: Data + 'static,
 {
     fn constrain(&self, data: &U) -> Result<(), Error> {
         Constraint::constrain(self.constraints(), data)
@@ -43,7 +44,7 @@ where
     }
 }
 
-pub trait Constraint<T>: Debug + DynClone
+pub trait Constraint<T>: Debug + DynClone + DynPartialEq
 where
     T: Data,
 {
@@ -55,7 +56,7 @@ clone_trait_object!(<T> Constraint<T>);
 impl<T, U> Constraint<U> for T
 where
     U: Data + Validate<T>,
-    T: Clone + Debug,
+    T: Clone + Debug + PartialEq + 'static,
 {
     fn constrain(&self, data: &U) -> Result<(), Error> {
         data.validate(self)
@@ -113,6 +114,23 @@ where
 {
     fn default() -> Self {
         Self(HashMap::new())
+    }
+}
+
+impl<T> PartialEq for Constraints<T>
+where
+    T: Data,
+{
+    fn eq(&self, item: &Self) -> bool {
+        if self.0.len() != item.0.len() {
+            return false;
+        }
+
+        self.0.iter().all(|(key, val)| {
+            item.0
+                .get(key)
+                .map_or(false, |v| val.eq_any(v.as_ref().as_any()))
+        })
     }
 }
 
@@ -196,10 +214,10 @@ mod tests {
         }
     }
 
-    #[derive(Clone, Debug)]
+    #[derive(Clone, Debug, PartialEq)]
     struct ConstraintOne(usize);
 
-    #[derive(Clone, Debug)]
+    #[derive(Clone, Debug, PartialEq)]
     struct ConstraintTwo(usize);
 
     impl Constrain<Number> for ConstraintOne {
@@ -271,5 +289,34 @@ mod tests {
 
         assert!(debug.contains("ConstraintOne(1)"));
         assert!(debug.contains("ConstraintTwo(2)"));
+    }
+
+    #[test]
+    fn test_constraint_equality() {
+        let a = ConstraintOne(1);
+        let b = ConstraintOne(1);
+        let c = ConstraintTwo(2);
+        let d = ConstraintTwo(3);
+
+        assert_eq!(a, b);
+        assert_ne!(c, d);
+
+        let mut one = Constraints::<Number>::new();
+
+        one.insert(a);
+
+        let mut two = Constraints::<Number>::new();
+
+        assert_ne!(one, two);
+
+        two.insert(b);
+
+        assert_eq!(one, two);
+        assert_eq!(one, one.clone());
+
+        one.insert(c);
+        two.insert(d);
+
+        assert_ne!(one, two);
     }
 }
