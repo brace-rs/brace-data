@@ -203,8 +203,12 @@ mod tests {
     impl Data for Number {
         type Definition = NumberDefinition;
 
+        fn definition(&self) -> &Self::Definition {
+            &self.1
+        }
+
         fn validate(&self) -> Result<(), Error> {
-            self.validate_constraint(&self.1)
+            self.validate_constraint(self.definition())
         }
     }
 

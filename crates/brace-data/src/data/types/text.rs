@@ -32,8 +32,12 @@ impl Text {
 impl Data for Text {
     type Definition = TextDefinition;
 
+    fn definition(&self) -> &Self::Definition {
+        &self.1
+    }
+
     fn validate(&self) -> Result<(), Error> {
-        self.validate_constraint(&self.1)
+        self.validate_constraint(self.definition())
     }
 }
 
