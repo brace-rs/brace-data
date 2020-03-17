@@ -68,7 +68,7 @@ mod tests {
     use super::Text;
     use crate::constraint::types::max_length::MaxLength;
     use crate::constraint::types::min_length::MinLength;
-    use crate::constraint::Validate;
+    use crate::constraint::ValidateConstraint;
     use crate::{Definition, TextDefinition};
 
     #[test]
@@ -101,13 +101,13 @@ mod tests {
         definition_one.constraints_mut().insert(MinLength(1));
         definition_one.constraints_mut().insert(MaxLength(9));
 
-        assert!(text.validate(&definition_one).is_ok());
+        assert!(text.validate_constraint(&definition_one).is_ok());
 
         let mut definition_two = TextDefinition::new();
 
         definition_two.constraints_mut().insert(MinLength(9));
         definition_two.constraints_mut().insert(MaxLength(9));
 
-        assert!(text.validate(&definition_two).is_err());
+        assert!(text.validate_constraint(&definition_two).is_err());
     }
 }

@@ -20,15 +20,15 @@ impl Constrain<Text> for MinLength {
 #[cfg(test)]
 mod tests {
     use super::MinLength;
-    use crate::constraint::Validate;
+    use crate::constraint::ValidateConstraint;
     use crate::data::types::text::Text;
 
     #[test]
     fn test_text_min_length() {
         let text = Text::from("hello");
 
-        assert!(text.validate(&MinLength(4)).is_ok());
-        assert!(text.validate(&MinLength(5)).is_ok());
-        assert!(text.validate(&MinLength(6)).is_err());
+        assert!(text.validate_constraint(&MinLength(4)).is_ok());
+        assert!(text.validate_constraint(&MinLength(5)).is_ok());
+        assert!(text.validate_constraint(&MinLength(6)).is_err());
     }
 }

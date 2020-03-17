@@ -20,15 +20,15 @@ impl Constrain<Text> for MaxLength {
 #[cfg(test)]
 mod tests {
     use super::MaxLength;
-    use crate::constraint::Validate;
+    use crate::constraint::ValidateConstraint;
     use crate::data::types::text::Text;
 
     #[test]
     fn test_text_max_length() {
         let text = Text::from("hello");
 
-        assert!(text.validate(&MaxLength(4)).is_err());
-        assert!(text.validate(&MaxLength(5)).is_ok());
-        assert!(text.validate(&MaxLength(6)).is_ok());
+        assert!(text.validate_constraint(&MaxLength(4)).is_err());
+        assert!(text.validate_constraint(&MaxLength(5)).is_ok());
+        assert!(text.validate_constraint(&MaxLength(6)).is_ok());
     }
 }
