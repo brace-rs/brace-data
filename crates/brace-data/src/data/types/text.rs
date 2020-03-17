@@ -1,16 +1,23 @@
-use crate::constraint::Constraints;
+use crate::constraint::{Constraints, Error, ValidateConstraint};
 use crate::data::definition::Definition;
 use crate::data::Data;
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Text(String);
+#[derive(Clone, Debug, PartialEq)]
+pub struct Text(String, TextDefinition);
 
 impl Text {
     pub fn new<T>(value: T) -> Self
     where
         T: Into<String>,
     {
-        Self(value.into())
+        Self(value.into(), TextDefinition::default())
+    }
+
+    pub fn with<T>(value: T, definition: TextDefinition) -> Self
+    where
+        T: Into<String>,
+    {
+        Self(value.into(), definition)
     }
 
     pub fn len(&self) -> usize {
@@ -24,21 +31,25 @@ impl Text {
 
 impl Data for Text {
     type Definition = TextDefinition;
+
+    fn validate(&self) -> Result<(), Error> {
+        self.validate_constraint(&self.1)
+    }
 }
 
 impl From<&str> for Text {
     fn from(from: &str) -> Self {
-        Self(from.to_owned())
+        Self::new(from)
     }
 }
 
 impl From<String> for Text {
     fn from(from: String) -> Self {
-        Self(from)
+        Self::new(from)
     }
 }
 
-#[derive(Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct TextDefinition {
     constraints: Constraints<Text>,
 }
@@ -68,8 +79,7 @@ mod tests {
     use super::Text;
     use crate::constraint::types::max_length::MaxLength;
     use crate::constraint::types::min_length::MinLength;
-    use crate::constraint::ValidateConstraint;
-    use crate::{Definition, TextDefinition};
+    use crate::{Data, Definition, TextDefinition};
 
     #[test]
     fn test_text_length() {
@@ -94,20 +104,22 @@ mod tests {
 
     #[test]
     fn test_text_data_definition() {
-        let text = Text::new("hello");
+        let text = Text::with("hello", {
+            let mut definition = TextDefinition::new();
+            definition.constraints_mut().insert(MinLength(1));
+            definition.constraints_mut().insert(MaxLength(9));
+            definition
+        });
 
-        let mut definition_one = TextDefinition::new();
+        assert!(text.validate().is_ok());
 
-        definition_one.constraints_mut().insert(MinLength(1));
-        definition_one.constraints_mut().insert(MaxLength(9));
+        let text = Text::with("hello", {
+            let mut definition = TextDefinition::new();
+            definition.constraints_mut().insert(MinLength(9));
+            definition.constraints_mut().insert(MaxLength(9));
+            definition
+        });
 
-        assert!(text.validate_constraint(&definition_one).is_ok());
-
-        let mut definition_two = TextDefinition::new();
-
-        definition_two.constraints_mut().insert(MinLength(9));
-        definition_two.constraints_mut().insert(MaxLength(9));
-
-        assert!(text.validate_constraint(&definition_two).is_err());
+        assert!(text.validate().is_err());
     }
 }

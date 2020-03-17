@@ -192,12 +192,23 @@ mod tests {
     use super::{Constrain, Constraints, Error, ValidateConstraint};
     use crate::{Data, Definition};
 
-    struct Number(usize);
+    struct Number(usize, NumberDefinition);
+
+    impl Number {
+        pub fn new(value: usize) -> Self {
+            Self(value, NumberDefinition::default())
+        }
+    }
 
     impl Data for Number {
         type Definition = NumberDefinition;
+
+        fn validate(&self) -> Result<(), Error> {
+            self.validate_constraint(&self.1)
+        }
     }
 
+    #[derive(Default)]
     struct NumberDefinition {
         constraints: Constraints<Number>,
     }
@@ -244,13 +255,13 @@ mod tests {
     fn test_constrain() {
         let constraint = ConstraintOne(1);
 
-        assert!(constraint.constrain(&Number(1)).is_ok());
-        assert!(constraint.constrain(&Number(2)).is_err());
+        assert!(constraint.constrain(&Number::new(1)).is_ok());
+        assert!(constraint.constrain(&Number::new(2)).is_err());
     }
 
     #[test]
     fn test_validate() {
-        let data = Number(1);
+        let data = Number::new(1);
 
         assert!(data.validate_constraint(&ConstraintOne(1)).is_ok());
         assert!(data.validate_constraint(&ConstraintOne(2)).is_err());
@@ -260,7 +271,7 @@ mod tests {
 
     #[test]
     fn test_constraint_clone() {
-        let data = Number(1);
+        let data = Number::new(1);
         let mut a = Constraints::<Number>::new();
 
         assert!(data.validate_constraint(&a).is_ok());
