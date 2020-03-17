@@ -11,3 +11,11 @@ pub trait Data {
 
     fn validate(&self) -> Result<(), Error>;
 }
+
+pub trait Construct: Data {
+    type Value;
+
+    fn construct<T>(value: T, definition: Self::Definition) -> Self
+    where
+        T: Into<Self::Value>;
+}

@@ -1,6 +1,6 @@
 use crate::constraint::{Constraints, Error, ValidateConstraint};
 use crate::data::definition::Definition;
-use crate::data::Data;
+use crate::data::{Construct, Data};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Text(String, TextDefinition);
@@ -11,13 +11,6 @@ impl Text {
         T: Into<String>,
     {
         Self(value.into(), TextDefinition::default())
-    }
-
-    pub fn with<T>(value: T, definition: TextDefinition) -> Self
-    where
-        T: Into<String>,
-    {
-        Self(value.into(), definition)
     }
 
     pub fn len(&self) -> usize {
@@ -38,6 +31,17 @@ impl Data for Text {
 
     fn validate(&self) -> Result<(), Error> {
         self.validate_constraint(self.definition())
+    }
+}
+
+impl Construct for Text {
+    type Value = String;
+
+    fn construct<T>(value: T, definition: Self::Definition) -> Self
+    where
+        T: Into<Self::Value>,
+    {
+        Self(value.into(), definition)
     }
 }
 
@@ -83,7 +87,7 @@ mod tests {
     use super::Text;
     use crate::constraint::types::max_length::MaxLength;
     use crate::constraint::types::min_length::MinLength;
-    use crate::{Data, Definition, TextDefinition};
+    use crate::{Construct, Data, Definition, TextDefinition};
 
     #[test]
     fn test_text_length() {
@@ -108,7 +112,7 @@ mod tests {
 
     #[test]
     fn test_text_data_definition() {
-        let text = Text::with("hello", {
+        let text = Text::construct("hello", {
             let mut definition = TextDefinition::new();
             definition.constraints_mut().insert(MinLength(1));
             definition.constraints_mut().insert(MaxLength(9));
@@ -117,7 +121,7 @@ mod tests {
 
         assert!(text.validate().is_ok());
 
-        let text = Text::with("hello", {
+        let text = Text::construct("hello", {
             let mut definition = TextDefinition::new();
             definition.constraints_mut().insert(MinLength(9));
             definition.constraints_mut().insert(MaxLength(9));
