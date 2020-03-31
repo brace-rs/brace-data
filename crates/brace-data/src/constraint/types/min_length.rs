@@ -1,5 +1,7 @@
 use crate::constraint::{Constrain, Error};
+use crate::data::definition::Definition;
 use crate::data::types::text::Text;
+use crate::data::Data;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct MinLength(pub usize);
@@ -8,7 +10,8 @@ impl Constrain<Text> for MinLength {
     fn constrain(&self, data: &Text) -> Result<(), Error> {
         if data.len() < self.0 {
             return Err(Error::message(format!(
-                "Does not meet minimum length of {}",
+                "{} does not meet minimum length of {}",
+                data.definition().label(),
                 self.0
             )));
         }

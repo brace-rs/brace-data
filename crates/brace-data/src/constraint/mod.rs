@@ -214,11 +214,23 @@ mod tests {
 
     #[derive(Default)]
     struct NumberDefinition {
+        label: String,
         constraints: Constraints<Number>,
     }
 
     impl Definition for NumberDefinition {
         type Data = Number;
+
+        fn label(&self) -> &str {
+            &self.label
+        }
+
+        fn set_label<T>(&mut self, label: T)
+        where
+            T: Into<String>,
+        {
+            self.label = label.into();
+        }
 
         fn constraints(&self) -> &Constraints<Self::Data> {
             &self.constraints

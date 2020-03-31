@@ -57,21 +57,31 @@ impl From<String> for Text {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct TextDefinition {
+    label: String,
     constraints: Constraints<Text>,
 }
 
 impl TextDefinition {
     pub fn new() -> Self {
-        Self {
-            constraints: Constraints::new(),
-        }
+        Self::default()
     }
 }
 
 impl Definition for TextDefinition {
     type Data = Text;
+
+    fn label(&self) -> &str {
+        &self.label
+    }
+
+    fn set_label<T>(&mut self, label: T)
+    where
+        T: Into<String>,
+    {
+        self.label = label.into();
+    }
 
     fn constraints(&self) -> &Constraints<Self::Data> {
         &self.constraints
@@ -79,6 +89,15 @@ impl Definition for TextDefinition {
 
     fn constraints_mut(&mut self) -> &mut Constraints<Self::Data> {
         &mut self.constraints
+    }
+}
+
+impl Default for TextDefinition {
+    fn default() -> Self {
+        Self {
+            label: String::from("Text"),
+            constraints: Constraints::new(),
+        }
     }
 }
 
@@ -114,29 +133,35 @@ mod tests {
     fn test_text_data_definition() {
         let text = Text::construct("hello", {
             Text::define()
+                .with_label("Greeting")
                 .with_constraint(MinLength(1))
                 .with_constraint(MaxLength(9))
         });
 
         assert!(text.validate().is_ok());
+        assert_eq!(text.definition().label(), "Greeting");
 
         let text = Text::construct("hello", {
             Text::define()
+                .with_label("Greeting")
                 .with_constraint(MinLength(9))
                 .with_constraint(MaxLength(9))
         });
 
         assert!(text.validate().is_err());
+        assert_eq!(text.definition().label(), "Greeting");
 
         let mut definition = TextDefinition::new();
         let constraints = definition.constraints_mut();
 
         constraints.insert(MinLength(2));
         constraints.insert(MaxLength(3));
+        definition.set_label("Message");
 
         assert_eq!(
             definition,
             Text::define()
+                .with_label("Message")
                 .with_constraint(MinLength(2))
                 .with_constraint(MaxLength(3))
         );
