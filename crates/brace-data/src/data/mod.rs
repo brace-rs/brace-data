@@ -7,6 +7,10 @@ pub mod types;
 pub trait Data {
     type Definition: Definition;
 
+    fn define() -> Self::Definition {
+        Self::Definition::default()
+    }
+
     fn definition(&self) -> &Self::Definition;
 
     fn validate(&self) -> Result<(), Error>;

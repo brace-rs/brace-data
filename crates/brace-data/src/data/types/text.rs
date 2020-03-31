@@ -113,21 +113,32 @@ mod tests {
     #[test]
     fn test_text_data_definition() {
         let text = Text::construct("hello", {
-            let mut definition = TextDefinition::new();
-            definition.constraints_mut().insert(MinLength(1));
-            definition.constraints_mut().insert(MaxLength(9));
-            definition
+            Text::define()
+                .with_constraint(MinLength(1))
+                .with_constraint(MaxLength(9))
         });
 
         assert!(text.validate().is_ok());
 
         let text = Text::construct("hello", {
-            let mut definition = TextDefinition::new();
-            definition.constraints_mut().insert(MinLength(9));
-            definition.constraints_mut().insert(MaxLength(9));
-            definition
+            Text::define()
+                .with_constraint(MinLength(9))
+                .with_constraint(MaxLength(9))
         });
 
         assert!(text.validate().is_err());
+
+        let mut definition = TextDefinition::new();
+        let constraints = definition.constraints_mut();
+
+        constraints.insert(MinLength(2));
+        constraints.insert(MaxLength(3));
+
+        assert_eq!(
+            definition,
+            Text::define()
+                .with_constraint(MinLength(2))
+                .with_constraint(MaxLength(3))
+        );
     }
 }
