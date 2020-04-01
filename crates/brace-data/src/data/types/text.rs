@@ -3,7 +3,7 @@ use crate::data::definition::Definition;
 use crate::data::{Construct, Data};
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct Text(String, TextDefinition);
+pub struct Text(pub(crate) String, TextDefinition);
 
 impl Text {
     pub fn new<T>(value: T) -> Self
