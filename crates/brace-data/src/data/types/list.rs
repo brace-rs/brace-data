@@ -1,6 +1,6 @@
 use std::ops::{Deref, DerefMut};
 
-use crate::constraint::{Constraints, Error, ValidateConstraint};
+use crate::constraint::Constraints;
 use crate::data::definition::Definition;
 use crate::data::{Construct, Data};
 
@@ -38,10 +38,6 @@ where
 
     fn definition(&self) -> &Self::Definition {
         &self.1
-    }
-
-    fn validate(&self) -> Result<(), Error> {
-        self.validate_constraint(self.definition())
     }
 }
 
@@ -157,6 +153,7 @@ where
 mod tests {
     use super::{List, ListDefinition};
     use crate::constraint::types::max_length::MaxLength;
+    use crate::constraint::Validate;
     use crate::{Construct, Data, Definition, Text};
 
     #[test]
@@ -196,7 +193,7 @@ mod tests {
                 .with_constraint(MaxLength(2)),
         );
 
-        assert!(list.validate().is_ok());
+        assert!(list.validate(list.definition()).is_ok());
         assert_eq!(list.definition().label(), "Items");
 
         let mut definition = ListDefinition::<Text>::new();

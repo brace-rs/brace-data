@@ -40,7 +40,7 @@ impl Constrain<Text> for Pattern {
 #[cfg(test)]
 mod tests {
     use super::Pattern;
-    use crate::constraint::ValidateConstraint;
+    use crate::constraint::Validate;
     use crate::data::types::text::Text;
 
     #[test]
@@ -60,7 +60,7 @@ mod tests {
         let number = Text::from("111-222-3333");
         let pattern = Pattern::new("[0-9]{3}-[0-9]{3}-[0-9]{4}").unwrap();
 
-        assert!(text.validate_constraint(&pattern).is_err());
-        assert!(number.validate_constraint(&pattern).is_ok());
+        assert!(text.validate(&pattern).is_err());
+        assert!(number.validate(&pattern).is_ok());
     }
 }

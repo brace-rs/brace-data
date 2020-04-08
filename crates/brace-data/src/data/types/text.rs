@@ -1,4 +1,4 @@
-use crate::constraint::{Constraints, Error, ValidateConstraint};
+use crate::constraint::Constraints;
 use crate::data::definition::Definition;
 use crate::data::{Construct, Data};
 
@@ -27,10 +27,6 @@ impl Data for Text {
 
     fn definition(&self) -> &Self::Definition {
         &self.1
-    }
-
-    fn validate(&self) -> Result<(), Error> {
-        self.validate_constraint(self.definition())
     }
 }
 
@@ -106,6 +102,7 @@ mod tests {
     use super::Text;
     use crate::constraint::types::max_length::MaxLength;
     use crate::constraint::types::min_length::MinLength;
+    use crate::constraint::Validate;
     use crate::{Construct, Data, Definition, TextDefinition};
 
     #[test]
@@ -138,7 +135,7 @@ mod tests {
                 .with_constraint(MaxLength(9))
         });
 
-        assert!(text.validate().is_ok());
+        assert!(text.validate(text.definition()).is_ok());
         assert_eq!(text.definition().label(), "Greeting");
 
         let text = Text::construct("hello", {
@@ -148,7 +145,7 @@ mod tests {
                 .with_constraint(MaxLength(9))
         });
 
-        assert!(text.validate().is_err());
+        assert!(text.validate(text.definition()).is_err());
         assert_eq!(text.definition().label(), "Greeting");
 
         let mut definition = TextDefinition::new();

@@ -49,7 +49,7 @@ mod tests {
     use super::Or;
     use crate::constraint::types::max_length::MaxLength;
     use crate::constraint::types::min_length::MinLength;
-    use crate::constraint::ValidateConstraint;
+    use crate::constraint::Validate;
     use crate::data::types::text::Text;
 
     #[test]
@@ -61,13 +61,13 @@ mod tests {
         constraint_one.insert(MinLength(9));
         constraint_one.insert(MaxLength(9));
 
-        assert!(text.validate_constraint(&constraint_one).is_ok());
+        assert!(text.validate(&constraint_one).is_ok());
 
         let mut constraint_two = Or::new();
 
         constraint_two.insert(MinLength(9));
         constraint_two.insert(MaxLength(1));
 
-        assert!(text.validate_constraint(&constraint_two).is_err());
+        assert!(text.validate(&constraint_two).is_err());
     }
 }

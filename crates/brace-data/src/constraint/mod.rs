@@ -30,16 +30,16 @@ where
     }
 }
 
-pub trait ValidateConstraint<T> {
-    fn validate_constraint(&self, constraint: &T) -> Result<(), Error>;
+pub trait Validate<T> {
+    fn validate(&self, constraint: &T) -> Result<(), Error>;
 }
 
-impl<T, U> ValidateConstraint<U> for T
+impl<T, U> Validate<U> for T
 where
     T: Data,
     U: Constrain<T>,
 {
-    fn validate_constraint(&self, constraint: &U) -> Result<(), Error> {
+    fn validate(&self, constraint: &U) -> Result<(), Error> {
         constraint.constrain(self)
     }
 }
@@ -55,11 +55,11 @@ clone_trait_object!(<T> Constraint<T>);
 
 impl<T, U> Constraint<U> for T
 where
-    U: Data + ValidateConstraint<T>,
+    U: Data + Validate<T>,
     T: Clone + Debug + PartialEq + 'static,
 {
     fn constrain(&self, data: &U) -> Result<(), Error> {
-        data.validate_constraint(self)
+        data.validate(self)
     }
 }
 
@@ -189,7 +189,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::{Constrain, Constraints, Error, ValidateConstraint};
+    use super::{Constrain, Constraints, Error, Validate};
     use crate::{Data, Definition};
 
     struct Number(usize, NumberDefinition);
@@ -205,10 +205,6 @@ mod tests {
 
         fn definition(&self) -> &Self::Definition {
             &self.1
-        }
-
-        fn validate(&self) -> Result<(), Error> {
-            self.validate_constraint(self.definition())
         }
     }
 
@@ -257,8 +253,8 @@ mod tests {
         }
     }
 
-    impl ValidateConstraint<ConstraintTwo> for Number {
-        fn validate_constraint(&self, constraint: &ConstraintTwo) -> Result<(), Error> {
+    impl Validate<ConstraintTwo> for Number {
+        fn validate(&self, constraint: &ConstraintTwo) -> Result<(), Error> {
             if self.0 != constraint.0 {
                 return Err(Error::message("Value does not match"));
             }
@@ -279,10 +275,10 @@ mod tests {
     fn test_validate() {
         let data = Number::new(1);
 
-        assert!(data.validate_constraint(&ConstraintOne(1)).is_ok());
-        assert!(data.validate_constraint(&ConstraintOne(2)).is_err());
-        assert!(data.validate_constraint(&ConstraintTwo(1)).is_ok());
-        assert!(data.validate_constraint(&ConstraintTwo(2)).is_err());
+        assert!(data.validate(&ConstraintOne(1)).is_ok());
+        assert!(data.validate(&ConstraintOne(2)).is_err());
+        assert!(data.validate(&ConstraintTwo(1)).is_ok());
+        assert!(data.validate(&ConstraintTwo(2)).is_err());
     }
 
     #[test]
@@ -290,19 +286,19 @@ mod tests {
         let data = Number::new(1);
         let mut a = Constraints::<Number>::new();
 
-        assert!(data.validate_constraint(&a).is_ok());
+        assert!(data.validate(&a).is_ok());
 
         a.insert(ConstraintOne(1));
 
-        assert!(data.validate_constraint(&a).is_ok());
+        assert!(data.validate(&a).is_ok());
 
         a.insert(ConstraintTwo(2));
 
-        assert!(data.validate_constraint(&a).is_err());
+        assert!(data.validate(&a).is_err());
 
         let b = a.clone();
 
-        assert!(data.validate_constraint(&b).is_err());
+        assert!(data.validate(&b).is_err());
     }
 
     #[test]
@@ -345,5 +341,23 @@ mod tests {
         two.insert(d);
 
         assert_ne!(one, two);
+    }
+
+    #[test]
+    fn test_constraints() {
+        let mut constraints = Constraints::<Number>::new();
+
+        constraints.insert(ConstraintOne(1));
+        constraints.insert(ConstraintTwo(2));
+
+        assert_eq!((&constraints).into_iter().len(), 2);
+
+        constraints.remove::<ConstraintOne>();
+
+        assert_eq!((&constraints).into_iter().len(), 1);
+
+        constraints.remove::<ConstraintTwo>();
+
+        assert_eq!((&constraints).into_iter().len(), 0);
     }
 }
