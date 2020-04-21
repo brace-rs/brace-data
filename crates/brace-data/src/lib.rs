@@ -6,7 +6,7 @@ pub use self::constraint::types::pattern::Pattern;
 pub use self::data::definition::Definition;
 pub use self::data::types::list::{List, ListDefinition};
 pub use self::data::types::text::{Text, TextDefinition};
-pub use self::data::{Construct, Data};
+pub use self::data::{Construct, Data, Define};
 
 pub mod constraint;
 pub mod data;

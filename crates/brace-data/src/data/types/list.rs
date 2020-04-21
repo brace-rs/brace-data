@@ -2,7 +2,7 @@ use std::ops::{Deref, DerefMut};
 
 use crate::constraint::Constraints;
 use crate::data::definition::Definition;
-use crate::data::{Construct, Data};
+use crate::data::{Construct, Data, Define};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct List<T>(Vec<T>, ListDefinition<T>)
@@ -38,6 +38,15 @@ where
 
     fn definition(&self) -> &Self::Definition {
         &self.1
+    }
+}
+
+impl<T> Define for List<T>
+where
+    T: Data + 'static,
+{
+    fn define() -> Self::Definition {
+        Self::Definition::default()
     }
 }
 
@@ -154,7 +163,7 @@ mod tests {
     use super::{List, ListDefinition};
     use crate::constraint::types::max_length::MaxLength;
     use crate::constraint::Validate;
-    use crate::{Construct, Data, Definition, Text};
+    use crate::{Construct, Data, Define, Definition, Text};
 
     #[test]
     fn test_list_data() {

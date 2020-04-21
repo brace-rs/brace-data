@@ -1,7 +1,7 @@
 use super::Data;
 use crate::constraint::{Constraint, Constraints};
 
-pub trait Definition: Default {
+pub trait Definition: Sized {
     type Data: Data;
 
     fn label(&self) -> &str;

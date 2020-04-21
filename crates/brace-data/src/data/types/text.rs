@@ -1,6 +1,6 @@
 use crate::constraint::Constraints;
 use crate::data::definition::Definition;
-use crate::data::{Construct, Data};
+use crate::data::{Construct, Data, Define};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Text(pub(crate) String, TextDefinition);
@@ -27,6 +27,12 @@ impl Data for Text {
 
     fn definition(&self) -> &Self::Definition {
         &self.1
+    }
+}
+
+impl Define for Text {
+    fn define() -> Self::Definition {
+        Self::Definition::default()
     }
 }
 
@@ -99,11 +105,11 @@ impl Default for TextDefinition {
 
 #[cfg(test)]
 mod tests {
-    use super::Text;
+    use super::{Text, TextDefinition};
     use crate::constraint::types::max_length::MaxLength;
     use crate::constraint::types::min_length::MinLength;
     use crate::constraint::Validate;
-    use crate::{Construct, Data, Definition, TextDefinition};
+    use crate::{Construct, Data, Define, Definition};
 
     #[test]
     fn test_text_length() {

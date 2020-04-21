@@ -6,11 +6,11 @@ pub mod types;
 pub trait Data {
     type Definition: Definition;
 
-    fn define() -> Self::Definition {
-        Self::Definition::default()
-    }
-
     fn definition(&self) -> &Self::Definition;
+}
+
+pub trait Define: Data {
+    fn define() -> Self::Definition;
 }
 
 pub trait Construct: Data {
