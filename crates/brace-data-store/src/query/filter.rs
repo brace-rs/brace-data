@@ -1,40 +1,40 @@
+use std::error;
+use std::fmt::{self, Display};
 use std::future::Future;
 use std::marker::PhantomData;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
-use futures::stream::Stream;
+use brace_util_future::result::FutureResult;
 
-use brace_util_future::stream::FutureStream;
+use crate::record::Records;
 
-pub struct Filter<'a, T, P>(Pin<Box<FutureStream<'a, T>>>, PhantomData<&'a P>);
+pub struct Filter<'a, T, P>(
+    Pin<Box<FutureResult<'a, Records<'a, T>, Error>>>,
+    PhantomData<&'a P>,
+);
 
 impl<'a, T, P> Filter<'a, T, P> {
-    pub fn from_future<F, S>(future: F) -> Self
-    where
-        F: Future<Output = S> + 'a,
-        S: Stream<Item = T> + 'a,
-        T: 'a,
-    {
-        Self(Box::pin(FutureStream::from_future(future)), PhantomData)
+    pub fn from_result(result: Result<Records<'a, T>, Error>) -> Self {
+        Self(Box::pin(FutureResult::from_result(result)), PhantomData)
     }
 
-    pub fn from_stream<S>(stream: S) -> Self
+    pub fn from_future<F>(future: F) -> Self
     where
-        S: Stream<Item = T> + 'a,
+        F: Future<Output = Result<Records<'a, T>, Error>> + 'a,
     {
-        Self(Box::pin(FutureStream::from_stream(stream)), PhantomData)
+        Self(Box::pin(FutureResult::from_future(future)), PhantomData)
     }
 }
 
-impl<'a, T, P> Stream for Filter<'a, T, P>
+impl<'a, T, P> Future for Filter<'a, T, P>
 where
     T: 'a,
 {
-    type Item = T;
+    type Output = Result<Records<'a, T>, Error>;
 
-    fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
-        self.0.as_mut().poll_next(cx)
+    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        self.0.as_mut().poll(cx)
     }
 }
 
@@ -50,3 +50,27 @@ where
         (self)(item)
     }
 }
+
+#[derive(Debug)]
+pub enum Error {
+    Message(String),
+}
+
+impl Error {
+    pub fn message<T>(message: T) -> Self
+    where
+        T: Into<String>,
+    {
+        Self::Message(message.into())
+    }
+}
+
+impl Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::Message(message) => message.fmt(f),
+        }
+    }
+}
+
+impl error::Error for Error {}
