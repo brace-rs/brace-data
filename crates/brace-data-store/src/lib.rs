@@ -1,9 +1,11 @@
-use brace_util_future::stream::FutureStream;
+pub use self::query::select::Select;
+
+pub mod query;
 
 pub trait Store {
     type Item;
 
-    fn select(&self) -> FutureStream<'_, &Self::Item>;
+    fn select(&self) -> Select<'_, &Self::Item>;
 }
 
 #[cfg(test)]
@@ -11,9 +13,7 @@ mod tests {
     use futures::stream::{iter, StreamExt};
     use indexmap::IndexSet;
 
-    use brace_util_future::stream::FutureStream;
-
-    use super::Store;
+    use super::{Select, Store};
 
     #[derive(Debug, PartialEq, Eq, Hash)]
     struct Book(&'static str);
@@ -23,8 +23,8 @@ mod tests {
     impl Store for Books {
         type Item = Book;
 
-        fn select(&self) -> FutureStream<'_, &Self::Item> {
-            FutureStream::from_stream(iter(self.0.iter()))
+        fn select(&self) -> Select<'_, &Self::Item> {
+            Select::from_stream(iter(self.0.iter()))
         }
     }
 
