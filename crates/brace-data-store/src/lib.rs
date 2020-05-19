@@ -1,5 +1,5 @@
-pub use self::query::filter::{Filter, Predicate};
-pub use self::query::select::Select;
+pub use self::query::filter::{Filter, FutureFilter, Predicate};
+pub use self::query::select::{FutureSelect, Select};
 pub use self::record::{Record, Records};
 
 pub mod query;
@@ -8,17 +8,29 @@ pub mod record;
 pub trait Store {
     type Item;
 
-    fn select(&self) -> Select<'_, Self::Item>;
-
-    fn filter<P>(&self, predicate: P) -> Filter<'_, Self::Item, P>
+    fn select<'a>(&'a self) -> FutureSelect<'a, Self::Item>
     where
-        P: Predicate<Self::Item> + Copy;
+        Self: Select<'a, <Self as Store>::Item>,
+    {
+        FutureSelect::new(Select::execute(self))
+    }
+
+    fn filter<'a, P>(&'a self, predicate: P) -> FutureFilter<'a, Self::Item, P>
+    where
+        P: Predicate<Self::Item> + Copy,
+        Self: Filter<'a, <Self as Store>::Item, P>,
+    {
+        FutureFilter::new(Filter::execute(self, predicate))
+    }
 }
 
 #[cfg(test)]
 mod tests {
+    use futures::future::{ok, Ready};
     use futures::stream::{iter, StreamExt};
     use indexmap::IndexSet;
+
+    use brace_util_future::result::FutureResult;
 
     use crate::query::filter::{self, Filter, Predicate};
     use crate::query::select::{self, Select};
@@ -31,20 +43,28 @@ mod tests {
 
     impl Store for Books {
         type Item = Book;
+    }
 
-        fn select(&self) -> Select<'_, Self::Item> {
-            Select::from_future(async move {
+    impl<'a> Select<'a, Book> for Books {
+        type Output = FutureResult<'a, Records<'a, Book>, select::Error>;
+
+        fn execute(&'a self) -> Self::Output {
+            FutureResult::from_future(async move {
                 Ok(Records::from_stream(iter(
                     self.0.iter().map(|item| Record::new(item.clone())),
                 )))
             })
         }
+    }
 
-        fn filter<P>(&self, predicate: P) -> Filter<'_, Self::Item, P>
-        where
-            P: Predicate<Self::Item> + Copy,
-        {
-            Filter::from_result(Ok(Records::from_stream(
+    impl<'a, P> Filter<'a, Book, P> for Books
+    where
+        P: Predicate<Book> + Copy + 'a,
+    {
+        type Output = Ready<Result<Records<'a, Book>, filter::Error>>;
+
+        fn execute(&'a self, predicate: P) -> Self::Output {
+            ok(Records::from_stream(
                 iter(self.0.iter().map(|item| Record::new(item.clone()))).filter_map(
                     move |item| async move {
                         if predicate.test(&item) {
@@ -54,7 +74,7 @@ mod tests {
                         None
                     },
                 ),
-            )))
+            ))
         }
     }
 

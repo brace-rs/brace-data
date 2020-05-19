@@ -8,14 +8,16 @@ use brace_util_future::result::FutureResult;
 
 use crate::record::Records;
 
-pub struct Select<'a, T>(Pin<Box<FutureResult<'a, Records<'a, T>, Error>>>);
+pub trait Select<'a, T> {
+    type Output: Future<Output = Result<Records<'a, T>, Error>>;
 
-impl<'a, T> Select<'a, T> {
-    pub fn from_result(result: Result<Records<'a, T>, Error>) -> Self {
-        Self(Box::pin(FutureResult::from_result(result)))
-    }
+    fn execute(&'a self) -> Self::Output;
+}
 
-    pub fn from_future<F>(future: F) -> Self
+pub struct FutureSelect<'a, T>(Pin<Box<FutureResult<'a, Records<'a, T>, Error>>>);
+
+impl<'a, T> FutureSelect<'a, T> {
+    pub fn new<F>(future: F) -> Self
     where
         F: Future<Output = Result<Records<'a, T>, Error>> + 'a,
     {
@@ -23,7 +25,7 @@ impl<'a, T> Select<'a, T> {
     }
 }
 
-impl<'a, T> Future for Select<'a, T>
+impl<'a, T> Future for FutureSelect<'a, T>
 where
     T: 'a,
 {

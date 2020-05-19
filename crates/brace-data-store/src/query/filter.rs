@@ -9,17 +9,22 @@ use brace_util_future::result::FutureResult;
 
 use crate::record::Records;
 
-pub struct Filter<'a, T, P>(
+pub trait Filter<'a, T, P>
+where
+    P: Predicate<T>,
+{
+    type Output: Future<Output = Result<Records<'a, T>, Error>>;
+
+    fn execute(&'a self, predicate: P) -> Self::Output;
+}
+
+pub struct FutureFilter<'a, T, P>(
     Pin<Box<FutureResult<'a, Records<'a, T>, Error>>>,
     PhantomData<&'a P>,
 );
 
-impl<'a, T, P> Filter<'a, T, P> {
-    pub fn from_result(result: Result<Records<'a, T>, Error>) -> Self {
-        Self(Box::pin(FutureResult::from_result(result)), PhantomData)
-    }
-
-    pub fn from_future<F>(future: F) -> Self
+impl<'a, T, P> FutureFilter<'a, T, P> {
+    pub fn new<F>(future: F) -> Self
     where
         F: Future<Output = Result<Records<'a, T>, Error>> + 'a,
     {
@@ -27,7 +32,7 @@ impl<'a, T, P> Filter<'a, T, P> {
     }
 }
 
-impl<'a, T, P> Future for Filter<'a, T, P>
+impl<'a, T, P> Future for FutureFilter<'a, T, P>
 where
     T: 'a,
 {
