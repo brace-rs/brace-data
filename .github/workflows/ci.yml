@@ -173,7 +173,7 @@ jobs:
       uses: actions-rs/cargo@v1
       with:
         command: test
-        args: --target ${{ matrix.target }}
+        args: --target ${{ matrix.target }} --all-features
 
     - name: Clean cache
       run: cargo install cargo-cache --no-default-features --features ci-autoclean && cargo-cache
@@ -240,7 +240,7 @@ jobs:
       uses: actions-rs/tarpaulin@v0.1
       with:
         version: latest
-        args: --ignore-tests
+        args: --ignore-tests --all-features
 
     - name: Upload code coverage
       uses: codecov/codecov-action@v1
