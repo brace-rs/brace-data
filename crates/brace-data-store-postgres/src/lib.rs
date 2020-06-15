@@ -1,7 +1,7 @@
 use bb8::Pool;
 use bb8_postgres::PostgresConnectionManager;
 use futures::future::TryFutureExt;
-use tokio_postgres::{Error, NoTls};
+use tokio_postgres::NoTls;
 
 #[cfg(feature = "tls")]
 use tokio_postgres_rustls::MakeRustlsConnect;
@@ -15,8 +15,10 @@ pub use tokio_postgres::Config;
 pub use rustls::ClientConfig as TlsConfig;
 
 pub use self::connection::PostgresConnection;
+pub use self::error::Error;
 
 pub mod connection;
+pub mod error;
 
 #[cfg(feature = "snakeoil")]
 const SNAKEOIL_CERT: &[u8] = include_bytes!("../fixtures/server.crt");
@@ -63,13 +65,13 @@ impl Postgres {
 
     pub fn connect(&self) -> FutureConnection<PostgresConnection> {
         match self {
-            Self::Plain(pool) => {
-                FutureConnection::from_future(pool.get().map_ok(PostgresConnection::plain))
-            }
+            Self::Plain(pool) => FutureConnection::from_future(
+                pool.get().map_ok(PostgresConnection::plain).err_into(),
+            ),
             #[cfg(feature = "tls")]
-            Self::Secure(pool) => {
-                FutureConnection::from_future(pool.get().map_ok(PostgresConnection::secure))
-            }
+            Self::Secure(pool) => FutureConnection::from_future(
+                pool.get().map_ok(PostgresConnection::secure).err_into(),
+            ),
         }
     }
 }

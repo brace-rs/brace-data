@@ -1,13 +1,15 @@
 use std::ops::{Deref, DerefMut};
 
-use bb8::{PooledConnection, RunError};
+use bb8::PooledConnection;
 use bb8_postgres::PostgresConnectionManager;
-use tokio_postgres::{Client, Error, NoTls};
+use tokio_postgres::{Client, NoTls};
 
 #[cfg(feature = "tls")]
 use tokio_postgres_rustls::MakeRustlsConnect;
 
 use brace_data_store::connection::Connection;
+
+use crate::error::Error;
 
 pub enum PostgresConnection<'a> {
     Plain(PooledConnection<'a, PostgresConnectionManager<NoTls>>),
@@ -29,7 +31,7 @@ impl<'a> PostgresConnection<'a> {
 }
 
 impl Connection for PostgresConnection<'_> {
-    type Error = RunError<Error>;
+    type Error = Error;
 }
 
 impl Deref for PostgresConnection<'_> {
