@@ -21,6 +21,7 @@ pub mod connection;
 #[cfg(feature = "snakeoil")]
 const SNAKEOIL_CERT: &[u8] = include_bytes!("../fixtures/server.crt");
 
+#[derive(Clone)]
 pub enum Postgres {
     Plain(Pool<PostgresConnectionManager<NoTls>>),
     #[cfg(feature = "tls")]
