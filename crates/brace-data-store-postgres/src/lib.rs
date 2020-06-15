@@ -1,11 +1,14 @@
-use bb8::{Pool, PooledConnection, RunError};
+use bb8::Pool;
 use bb8_postgres::PostgresConnectionManager;
+use futures::future::TryFutureExt;
 use tokio_postgres::{Config, Error, NoTls};
 
+use brace_data_store::connection::FutureConnection;
 use brace_util_future::result::FutureResult;
 
-pub type FutureConnection<'a> =
-    FutureResult<'a, PooledConnection<'a, PostgresConnectionManager<NoTls>>, RunError<Error>>;
+pub use self::connection::PostgresConnection;
+
+pub mod connection;
 
 pub struct Postgres(Pool<PostgresConnectionManager<NoTls>>);
 
@@ -23,7 +26,7 @@ impl Postgres {
         &self.0
     }
 
-    pub fn connect(&self) -> FutureConnection {
-        FutureResult::from_future(async move { self.pool().get().await })
+    pub fn connect(&self) -> FutureConnection<PostgresConnection> {
+        FutureConnection::from_future(self.pool().get().map_ok(PostgresConnection::new))
     }
 }

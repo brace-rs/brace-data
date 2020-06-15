@@ -2,6 +2,7 @@ pub use self::query::filter::{Filter, FutureFilter, Predicate};
 pub use self::query::select::{FutureSelect, Select};
 pub use self::record::{Record, Records};
 
+pub mod connection;
 pub mod query;
 pub mod record;
 
