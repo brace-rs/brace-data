@@ -282,6 +282,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::redundant_clone)]
     fn test_constraint_clone() {
         let data = Number::new(1);
         let mut a = Constraints::<Number>::new();
