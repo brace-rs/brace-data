@@ -7,6 +7,16 @@ repository = "https://github.com/brace-rs/brace-data"
 license = "MIT OR Apache-2.0"
 edition = "2018"
 
+[features]
+default = []
+
+bit-vec = ["bb8-postgres/with-bit-vec-0_6"]
+chrono = ["bb8-postgres/with-chrono-0_4"]
+eui = ["bb8-postgres/with-eui48-0_4"]
+geo = ["bb8-postgres/with-geo-types-0_4"]
+json = ["bb8-postgres/with-serde_json-1"]
+uuid = ["bb8-postgres/with-uuid-0_8"]
+
 [dependencies]
 bb8 = "0.4"
 bb8-postgres = "0.4"
